@@ -51,6 +51,9 @@ namespace Platformer2D
         private TouchCollection touchState;
         private AccelerometerState accelerometerState;
 
+        // Analytics Fields
+        private Guid GameId = Guid.NewGuid();
+
         private VirtualGamePad virtualGamePad;
 
         // The number of levels in the Levels directory of our content. We assume that
@@ -159,14 +162,27 @@ namespace Platformer2D
             {
                 if (!level.Player.IsAlive)
                 {
+                    B4G.Analytics.GameBrain(
+                        new B4G.Analytics.Message(GameId, "Dead")
+                    );
                     level.StartNewLife();
                 }
                 else if (level.TimeRemaining == TimeSpan.Zero)
                 {
                     if (level.ReachedExit)
+                    {
+                        B4G.Analytics.GameBrain(
+                            new B4G.Analytics.Message(GameId, "Won")
+                        );
                         LoadNextLevel();
+                    }
                     else
+                    {
+                        B4G.Analytics.GameBrain(
+                            new B4G.Analytics.Message(GameId, "Playing")
+                        );
                         ReloadCurrentLevel();
+                    }
                 }
             }
 

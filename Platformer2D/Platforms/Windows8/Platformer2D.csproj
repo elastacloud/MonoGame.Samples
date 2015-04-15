@@ -171,6 +171,12 @@
       <HintPath>..\..\..\packages\MonoGame.Framework.Windows8.3.3.0.0\lib\netcore\MonoGame.Framework.dll</HintPath>
     </Reference>
   </ItemGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\..\..\PortableLibrary1\B4G.PortableAnalytics.fsproj">
+      <Project>{0a4cb4d7-f614-41f9-ba29-afd1e736ad12}</Project>
+      <Name>B4G.PortableAnalytics</Name>
+    </ProjectReference>
+  </ItemGroup>
   <PropertyGroup Condition=" '$(VisualStudioVersion)' == '' or '$(VisualStudioVersion)' &lt; '11.0' ">
     <VisualStudioVersion>11.0</VisualStudioVersion>
   </PropertyGroup>
