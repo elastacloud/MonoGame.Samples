@@ -338,6 +338,14 @@ namespace Platformer2D
                 // Continues not jumping or cancels a jump in progress
                 jumpTime = 0.0f;
             }
+
+            if (!wasJumping && isJumping)
+            {
+                // Jump started
+                B4G.Analytics.GameBrain(
+                        new B4G.Analytics.Message(PlatformerGame.GameId, PlatformerGame.GamerId, "Jump"));
+            }
+
             wasJumping = isJumping;
 
             return velocityY;

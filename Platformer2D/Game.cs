@@ -52,7 +52,8 @@ namespace Platformer2D
         private AccelerometerState accelerometerState;
 
         // Analytics Fields
-        private Guid GameId = Guid.NewGuid();
+        public static Guid GameId = Guid.NewGuid();
+        public static Guid GamerId = Guid.NewGuid();
 
         private VirtualGamePad virtualGamePad;
 
@@ -163,7 +164,7 @@ namespace Platformer2D
                 if (!level.Player.IsAlive)
                 {
                     B4G.Analytics.GameBrain(
-                        new B4G.Analytics.Message(GameId, "Dead")
+                        new B4G.Analytics.Message(GameId, GamerId, "Dead")
                     );
                     level.StartNewLife();
                 }
@@ -172,14 +173,14 @@ namespace Platformer2D
                     if (level.ReachedExit)
                     {
                         B4G.Analytics.GameBrain(
-                            new B4G.Analytics.Message(GameId, "Won")
+                            new B4G.Analytics.Message(GameId, GamerId, "Won")
                         );
                         LoadNextLevel();
                     }
                     else
                     {
                         B4G.Analytics.GameBrain(
-                            new B4G.Analytics.Message(GameId, "Playing")
+                            new B4G.Analytics.Message(GameId, GamerId, "Playing")
                         );
                         ReloadCurrentLevel();
                     }
