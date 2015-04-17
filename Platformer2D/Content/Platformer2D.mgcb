@@ -121,6 +121,17 @@
 #begin Levels/2.txt
 /copy:Levels/2.txt
 
+#begin Overlays/you_buy.png
+/importer:TextureImporter
+/processor:TextureProcessor
+/processorParam:ColorKeyColor=255,0,255,255
+/processorParam:ColorKeyEnabled=True
+/processorParam:GenerateMipmaps=False
+/processorParam:PremultiplyAlpha=True
+/processorParam:ResizeToPowerOfTwo=False
+/processorParam:TextureFormat=Color
+/build:Overlays/you_buy.png
+
 #begin Overlays/you_died.png
 /importer:TextureImporter
 /processor:TextureProcessor

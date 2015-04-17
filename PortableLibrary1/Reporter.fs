@@ -17,7 +17,7 @@ let private CreateReporter id =
                 System.Diagnostics.Debug.WriteLine (sprintf "Game %A action %s" message.GameId message.Message)
                 let wc = new HttpClient()
                 try 
-                    let task = wc.PostAsync("http://requestb.in/1jrk9y71", new StringContent(JsonConvert.SerializeObject(message)))
+                    let task = wc.PostAsync("http://requestb.in/o1x3oio1", new StringContent(JsonConvert.SerializeObject(message)))
                     let! result = Async.AwaitTask task
                     System.Diagnostics.Debug.WriteLine (sprintf "Game %A action %s result %A" message.GameId message.Message result.StatusCode)
                 
@@ -28,3 +28,6 @@ let private CreateReporter id =
 
 let private agent = CreateReporter 1
 let GameBrain message = agent.Post message
+
+let ShouldMonetize () = 
+    DateTime.Now.Second % 30 = 0

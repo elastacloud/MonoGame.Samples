@@ -35,6 +35,7 @@ namespace Platformer2D
         private Texture2D winOverlay;
         private Texture2D loseOverlay;
         private Texture2D diedOverlay;
+        private Texture2D buyOverlay;
 
         // Meta-level game state.
         private int levelIndex = -1;
@@ -52,8 +53,9 @@ namespace Platformer2D
         private AccelerometerState accelerometerState;
 
         // Analytics Fields
-        public static Guid GameId = Guid.NewGuid();
+        public static Guid GameId = Guid.Parse("0a66e5ff-491e-4dd4-893f-dd2dc6ea17b6");
         public static Guid GamerId = Guid.NewGuid();
+        private bool monetizeOpportunity;
 
         private VirtualGamePad virtualGamePad;
 
@@ -96,6 +98,7 @@ namespace Platformer2D
             winOverlay = Content.Load<Texture2D>("Overlays/you_win");
             loseOverlay = Content.Load<Texture2D>("Overlays/you_lose");
             diedOverlay = Content.Load<Texture2D>("Overlays/you_died");
+            buyOverlay = Content.Load<Texture2D>("Overlays/you_buy");
 
             //Work out how much we need to scale our graphics to fill the screen
             float horScaling = GraphicsDevice.PresentationParameters.BackBufferWidth / baseScreenSize.X;
@@ -157,10 +160,30 @@ namespace Platformer2D
                 gamePadState.IsButtonDown(Buttons.A) ||
                 touchState.AnyTouch();
 
+            bool monetizePressed =
+                keyboardState.IsKeyDown(Keys.Enter);
+
+            if (monetizePressed)
+            {
+                B4G.Analytics.GameBrain(
+                    new B4G.Analytics.Message(GameId, GamerId, "Monetize")
+                );
+                monetizeOpportunity = false;
+            }
+
             // Perform the appropriate action to advance the game and
             // to get the player back to playing.
             if (!wasContinuePressed && continuePressed)
             {
+                if (!monetizePressed)
+                {
+                    // Player declined to monetize
+                    B4G.Analytics.GameBrain(
+                        new B4G.Analytics.Message(GameId, GamerId, "MonetizeDeclined")
+                    );
+                }
+                monetizeOpportunity = false;
+
                 if (!level.Player.IsAlive)
                 {
                     B4G.Analytics.GameBrain(
@@ -277,6 +300,11 @@ namespace Platformer2D
             else if (!level.Player.IsAlive)
             {
                 status = diedOverlay;
+            }
+            else if (monetizeOpportunity || B4G.Analytics.ShouldMonetize())
+            {
+                monetizeOpportunity = true;
+                status = buyOverlay;
             }
 
             if (status != null)
