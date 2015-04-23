@@ -241,6 +241,12 @@ namespace Platformer2D
                 movement = 1.0f;
             }
 
+            // This should be sampled
+            // Movement started
+            //B4G.Analytics.GameBrain(
+            //        new B4G.Analytics.Message(PlatformerGame.GameId, PlatformerGame.GamerId, "Movement", level.Score, level.TimeRemaining));
+       
+
             // Check if the player wants to jump.
             isJumping =
                 gamePadState.IsButtonDown(JumpButton) ||
@@ -343,7 +349,7 @@ namespace Platformer2D
             {
                 // Jump started
                 B4G.Analytics.GameBrain(
-                        new B4G.Analytics.Message(PlatformerGame.GameId, PlatformerGame.GamerId, "Jump"));
+                        new B4G.Analytics.Message(PlatformerGame.GameId, PlatformerGame.GamerId, "Jump", level.Score, level.ScorePercentage, level.TimeRemaining.TotalSeconds));
             }
 
             wasJumping = isJumping;

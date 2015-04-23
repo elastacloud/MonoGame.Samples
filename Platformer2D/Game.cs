@@ -14,6 +14,8 @@ using Microsoft.Xna.Framework.Graphics;
 using Microsoft.Xna.Framework.Input;
 using Microsoft.Xna.Framework.Media;
 using Microsoft.Xna.Framework.Input.Touch;
+using Microsoft.Xna.Framework.Storage;
+using System.Diagnostics;
 
 
 namespace Platformer2D
@@ -53,6 +55,7 @@ namespace Platformer2D
         private AccelerometerState accelerometerState;
 
         // Analytics Fields
+        //public StorageDevice storageDevice = new StorageDevice()
         public static Guid GameId = Guid.Parse("0a66e5ff-491e-4dd4-893f-dd2dc6ea17b6");
         public static Guid GamerId = Guid.NewGuid();
         private bool monetizeOpportunity;
@@ -80,6 +83,8 @@ namespace Platformer2D
             graphics.SupportedOrientations = DisplayOrientation.LandscapeLeft | DisplayOrientation.LandscapeRight;
 
             Accelerometer.Initialize();
+
+            B4G.Analytics.StartListening(GameId, GamerId);
         }
 
         /// <summary>
@@ -155,62 +160,69 @@ namespace Platformer2D
             if (gamePadState.Buttons.Back == ButtonState.Pressed)
                 Exit();
 #endif
-            bool continuePressed =
-                keyboardState.IsKeyDown(Keys.Space) ||
-                gamePadState.IsButtonDown(Buttons.A) ||
-                touchState.AnyTouch();
-
-            bool monetizePressed =
-                keyboardState.IsKeyDown(Keys.Enter);
-
-            if (monetizePressed)
+            try
             {
-                B4G.Analytics.GameBrain(
-                    new B4G.Analytics.Message(GameId, GamerId, "Monetize")
-                );
-                monetizeOpportunity = false;
-            }
+                bool continuePressed =
+                    keyboardState.IsKeyDown(Keys.Space) ||
+                    gamePadState.IsButtonDown(Buttons.A) ||
+                    touchState.AnyTouch();
 
-            // Perform the appropriate action to advance the game and
-            // to get the player back to playing.
-            if (!wasContinuePressed && continuePressed)
-            {
-                if (!monetizePressed)
-                {
-                    // Player declined to monetize
-                    B4G.Analytics.GameBrain(
-                        new B4G.Analytics.Message(GameId, GamerId, "MonetizeDeclined")
-                    );
-                }
-                monetizeOpportunity = false;
+                bool monetizePressed =
+                    keyboardState.IsKeyDown(Keys.Enter);
 
-                if (!level.Player.IsAlive)
+                if (monetizePressed)
                 {
                     B4G.Analytics.GameBrain(
-                        new B4G.Analytics.Message(GameId, GamerId, "Dead")
+                        new B4G.Analytics.Message(GameId, GamerId, "Monetize", level.Score, level.ScorePercentage, level.TimeRemaining.TotalSeconds)
                     );
-                    level.StartNewLife();
+                    monetizeOpportunity = false;
                 }
-                else if (level.TimeRemaining == TimeSpan.Zero)
-                {
-                    if (level.ReachedExit)
-                    {
-                        B4G.Analytics.GameBrain(
-                            new B4G.Analytics.Message(GameId, GamerId, "Won")
-                        );
-                        LoadNextLevel();
-                    }
-                    else
-                    {
-                        B4G.Analytics.GameBrain(
-                            new B4G.Analytics.Message(GameId, GamerId, "Playing")
-                        );
-                        ReloadCurrentLevel();
-                    }
-                }
-            }
 
-            wasContinuePressed = continuePressed;
+                // Perform the appropriate action to advance the game and
+                // to get the player back to playing.
+                if (!wasContinuePressed && continuePressed)
+                {
+                    if (!monetizePressed)
+                    {
+                        // Player declined to monetize
+                        B4G.Analytics.GameBrain(
+                            new B4G.Analytics.Message(GameId, GamerId, "MonetizeDeclined", level.Score, level.ScorePercentage, level.TimeRemaining.TotalSeconds)
+                        );
+                    }
+                    monetizeOpportunity = false;
+
+                    if (!level.Player.IsAlive)
+                    {
+                        B4G.Analytics.GameBrain(
+                            new B4G.Analytics.Message(GameId, GamerId, "Dead", level.Score, level.ScorePercentage, level.TimeRemaining.TotalSeconds)
+                        );
+                        level.StartNewLife();
+                    }
+                    else if (level.TimeRemaining == TimeSpan.Zero)
+                    {
+                        if (level.ReachedExit)
+                        {
+                            B4G.Analytics.GameBrain(
+                                new B4G.Analytics.Message(GameId, GamerId, "Won", level.Score, level.ScorePercentage, level.TimeRemaining.TotalSeconds)
+                            );
+                            LoadNextLevel();
+                        }
+                        else
+                        {
+                            B4G.Analytics.GameBrain(
+                                new B4G.Analytics.Message(GameId, GamerId, "Playing", level.Score, level.ScorePercentage, level.TimeRemaining.TotalSeconds)
+                            );
+                            ReloadCurrentLevel();
+                        }
+                    }
+                }
+
+                wasContinuePressed = continuePressed;
+            }
+            catch
+            {
+                
+            }
 
             virtualGamePad.Update(gameTime);
         }
@@ -257,65 +269,72 @@ namespace Platformer2D
 
         private void DrawHud()
         {
-            Rectangle titleSafeArea = GraphicsDevice.Viewport.TitleSafeArea;
-            Vector2 hudLocation = new Vector2(titleSafeArea.X, titleSafeArea.Y);
-            //Vector2 center = new Vector2(titleSafeArea.X + titleSafeArea.Width / 2.0f,
-            //                             titleSafeArea.Y + titleSafeArea.Height / 2.0f);
-
-            Vector2 center = new Vector2(baseScreenSize.X / 2, baseScreenSize.Y / 2);
-
-            // Draw time remaining. Uses modulo division to cause blinking when the
-            // player is running out of time.
-            string timeString = "TIME: " + level.TimeRemaining.Minutes.ToString("00") + ":" + level.TimeRemaining.Seconds.ToString("00");
-            Color timeColor;
-            if (level.TimeRemaining > WarningTime ||
-                level.ReachedExit ||
-                (int)level.TimeRemaining.TotalSeconds % 2 == 0)
+            try
             {
-                timeColor = Color.Yellow;
-            }
-            else
-            {
-                timeColor = Color.Red;
-            }
-            DrawShadowedString(hudFont, timeString, hudLocation, timeColor);
+                Rectangle titleSafeArea = GraphicsDevice.Viewport.TitleSafeArea;
+                Vector2 hudLocation = new Vector2(titleSafeArea.X, titleSafeArea.Y);
+                //Vector2 center = new Vector2(titleSafeArea.X + titleSafeArea.Width / 2.0f,
+                //                             titleSafeArea.Y + titleSafeArea.Height / 2.0f);
 
-            // Draw score
-            float timeHeight = hudFont.MeasureString(timeString).Y;
-            DrawShadowedString(hudFont, "SCORE: " + level.Score.ToString(), hudLocation + new Vector2(0.0f, timeHeight * 1.2f), Color.Yellow);
-           
-            // Determine the status overlay message to show.
-            Texture2D status = null;
-            if (level.TimeRemaining == TimeSpan.Zero)
-            {
-                if (level.ReachedExit)
+                Vector2 center = new Vector2(baseScreenSize.X / 2, baseScreenSize.Y / 2);
+
+                // Draw time remaining. Uses modulo division to cause blinking when the
+                // player is running out of time.
+                string timeString = "TIME: " + level.TimeRemaining.Minutes.ToString("00") + ":" + level.TimeRemaining.Seconds.ToString("00");
+                Color timeColor;
+                if (level.TimeRemaining > WarningTime ||
+                    level.ReachedExit ||
+                    (int)level.TimeRemaining.TotalSeconds % 2 == 0)
                 {
-                    status = winOverlay;
+                    timeColor = Color.Yellow;
                 }
                 else
                 {
-                    status = loseOverlay;
+                    timeColor = Color.Red;
                 }
-            }
-            else if (!level.Player.IsAlive)
-            {
-                status = diedOverlay;
-            }
-            else if (monetizeOpportunity || B4G.Analytics.ShouldMonetize())
-            {
-                monetizeOpportunity = true;
-                status = buyOverlay;
-            }
+                DrawShadowedString(hudFont, timeString, hudLocation, timeColor);
 
-            if (status != null)
-            {
-                // Draw status message.
-                Vector2 statusSize = new Vector2(status.Width, status.Height);
-                spriteBatch.Draw(status, center - statusSize / 2, Color.White);
-            }
+                // Draw score
+                float timeHeight = hudFont.MeasureString(timeString).Y;
+                DrawShadowedString(hudFont, "SCORE: " + level.Score.ToString(), hudLocation + new Vector2(0.0f, timeHeight * 1.2f), Color.Yellow);
 
-            if (touchState.IsConnected)
-                virtualGamePad.Draw(spriteBatch);
+                // Determine the status overlay message to show.
+                Texture2D status = null;
+                if (level.TimeRemaining == TimeSpan.Zero)
+                {
+                    if (level.ReachedExit)
+                    {
+                        status = winOverlay;
+                    }
+                    else
+                    {
+                        status = loseOverlay;
+                    }
+                }
+                else if (!level.Player.IsAlive)
+                {
+                    status = diedOverlay;
+                }
+                else if (monetizeOpportunity || B4G.Analytics.ShouldMonetize())
+                {
+                    monetizeOpportunity = true;
+                    status = buyOverlay;
+                }
+
+                if (status != null)
+                {
+                    // Draw status message.
+                    Vector2 statusSize = new Vector2(status.Width, status.Height);
+                    spriteBatch.Draw(status, center - statusSize / 2, Color.White);
+                }
+
+                if (touchState.IsConnected)
+                    virtualGamePad.Draw(spriteBatch);
+            }
+            catch
+            {
+                Debug.WriteLine("ffs");
+            }
         }
 
         private void DrawShadowedString(SpriteFont font, string value, Vector2 position, Color color)

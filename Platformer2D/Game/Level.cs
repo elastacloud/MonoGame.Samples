@@ -55,6 +55,19 @@ namespace Platformer2D
         }
         int score;
 
+        public int MaxScore
+        {
+            get { return gems.Count * 30; }
+        }
+
+        public double ScorePercentage
+        {
+            get {
+                if (MaxScore == 0) return 0;
+                return (Score / MaxScore) * 100d; 
+            }
+        }
+
         public bool ReachedExit
         {
             get { return reachedExit; }
